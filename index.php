@@ -5,21 +5,31 @@ if (!isset($_SESSION['expression'])) {
     $_SESSION['expression'] = '';
 }
 
-if (isset($_POST['input']) && $_SESSION['expression'] !== 'Error') {
-    $_SESSION['expression'] .= $_POST['input'];
+if (isset($_POST['input']) && $_SESSION['expression'] !== 'Syntacs Error') {
+    // Append the input only if the last character is not a zero or if the last character is not a digit
+    if ($_POST['input'] !== '0' || !preg_match('/\d$/', $_SESSION['expression'])) {
+        $_SESSION['expression'] .= $_POST['input'];
+    }
 } 
 
-if (isset($_POST['operator']) && $_SESSION['expression'] !== 'Error') {
-    $_SESSION['expression'] .= ' ' . $_POST['operator'] . ' ';
-} 
+if (isset($_POST['operator']) && $_SESSION['expression'] !== 'Syntacs Error') {
+    // Remove any trailing spaces before adding the operator
+    $_SESSION['expression'] = rtrim($_SESSION['expression']);
 
-if (isset($_POST['dot']) && $_SESSION['expression'] !== 'Error') {
+    // Check if the last character is an operator
     $lastChar = substr($_SESSION['expression'], -1);
-    if ($lastChar !== '.' && !preg_match('/\d+\.\d*$/', $_SESSION['expression'])) {
-        if (empty($_SESSION['expression']) || preg_match('/[+\-*\/]\s*$/', $_SESSION['expression'])) {
-            $_SESSION['expression'] .= '0';
-        }
+    if (!in_array($lastChar, ['+', '-', '*', '/'])) {
+        $_SESSION['expression'] .= ' ' . $_POST['operator'] . ' ';
+    }
+} 
+
+if (isset($_POST['dot']) && $_SESSION['expression'] !== 'Syntacs Error') {
+    // Check if the last character is a digit and if there is no decimal point already present
+    if (preg_match('/\d$/', $_SESSION['expression']) && !preg_match('/\.\d*$/', $_SESSION['expression'])) {
         $_SESSION['expression'] .= '.';
+    } elseif (empty($_SESSION['expression'])) {
+        // If the expression is empty, start with a zero followed by a decimal point
+        $_SESSION['expression'] = '0.';
     }
 }
 
@@ -27,18 +37,18 @@ if (isset($_POST['clear'])) {
     $_SESSION['expression'] = '';
 }
 
-if (isset($_POST['back']) && $_SESSION['expression'] !== 'Error') {
+if (isset($_POST['back']) && $_SESSION['expression'] !== 'Syntacs Error') {
     $_SESSION['expression'] = substr($_SESSION['expression'], 0, -1); // Remove the last character
 }
 
-if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Error') {
+if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Syntacs Error') {
     $expression = $_SESSION['expression'];
     if (!preg_match('/^\d+(\.\d+)?\s*([+\-*\/]\s*\d+(\.\d+)?\s*)*$/', $expression)) {
-        $_SESSION['expression'] = 'Error';
+        $_SESSION['expression'] = 'Syntacs Error';
     } else {
         $result = @eval('return ' . $expression . ';');
         if ($result === false) {
-            $_SESSION['expression'] = 'Error';
+            $_SESSION['expression'] = 'Syntacs Error';
         } else {
             $_SESSION['expression'] = $result;
         }
@@ -134,7 +144,7 @@ if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Error') {
     <h1>CASIO</h1>
     <span style="font-family:'Times New Roman', Times, serif; font-style:italic;font-size:10px; color:white; float: right;">fx-991 CW</span>
     <form action="" method="post">
-        <input type="text" id="mainInput" name="expression" value="<?php echo htmlspecialchars(@$_SESSION['expression']) ?>" <?php if($_SESSION['expression'] === 'Error') { echo 'style="color: #ff0000;"'; } ?> readonly>
+        <input type="text" id="mainInput" name="expression" value="<?php echo htmlspecialchars(@$_SESSION['expression']) ?>" <?php if($_SESSION['expression'] === 'Syntacs Error') { echo 'style="color: #ff0000;"'; } ?> readonly>
         
         <div class="buttons">
             <button class="clear" type="submit" name="clear">C</button>
