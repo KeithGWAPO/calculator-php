@@ -14,12 +14,12 @@ if (isset($_POST['operator']) && $_SESSION['expression'] !== 'Error') {
 } 
 
 if (isset($_POST['dot']) && $_SESSION['expression'] !== 'Error') {
-
-    if (!strpos($_SESSION['expression'], '.')) {
+    $lastChar = substr($_SESSION['expression'], -1);
+    if ($lastChar !== '.' && !preg_match('/\d+\.\d*$/', $_SESSION['expression'])) {
+        if (empty($_SESSION['expression']) || preg_match('/[+\-*\/]\s*$/', $_SESSION['expression'])) {
+            $_SESSION['expression'] .= '0';
+        }
         $_SESSION['expression'] .= '.';
-    } else {
-
-        $_SESSION['expression'] = 'Error';
     }
 }
 
@@ -32,7 +32,6 @@ if (isset($_POST['back']) && $_SESSION['expression'] !== 'Error') {
 }
 
 if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Error') {
-
     $expression = $_SESSION['expression'];
     if (!preg_match('/^\d+(\.\d+)?\s*([+\-*\/]\s*\d+(\.\d+)?\s*)*$/', $expression)) {
         $_SESSION['expression'] = 'Error';
@@ -41,7 +40,6 @@ if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Error') {
         if ($result === false) {
             $_SESSION['expression'] = 'Error';
         } else {
-
             $_SESSION['expression'] = $result;
         }
     }
@@ -161,20 +159,22 @@ if (isset($_POST['equal']) && $_SESSION['expression'] !== 'Error') {
     </form>
 </div>
 <script>
-
+    // Function to adjust text alignment based on content length
     function adjustTextAlignment() {
         var inputField = document.getElementById("mainInput");
         if (inputField.scrollWidth > inputField.clientWidth) {
-            inputField.style.textAlign = "left";
-            inputField.scrollLeft = inputField.scrollWidth - inputField.clientWidth;
+            inputField.style.textAlign = "left"; // Align text to the left if it overflows
+            inputField.scrollLeft = inputField.scrollWidth - inputField.clientWidth; // Scroll to the end
         } else {
-            inputField.style.textAlign = "right";
-            inputField.scrollLeft = 0;
+            inputField.style.textAlign = "right"; // Align text to the right if it fits
+            inputField.scrollLeft = 0; // Reset scroll to the rightmost position
         }
     }
 
+    // Call the function whenever there's a change in the input field
     document.getElementById("mainInput").addEventListener("input", adjustTextAlignment);
 
+    // Call the function initially to set the initial text alignment
     adjustTextAlignment();
 </script>
 </body>
